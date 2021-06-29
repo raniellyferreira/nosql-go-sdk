@@ -23,7 +23,10 @@ var (
 	testErrNilKey             = nosqlerr.NewIllegalArgument("Key must be non-nil")
 	testErrEmptyKey           = nosqlerr.NewIllegalArgument("Key must be non-empty")
 	testErrNilTableLimits     = nosqlerr.NewIllegalArgument("TableLimits must be non-nil")
-	testErrInvalidTableLimits = nosqlerr.NewIllegalArgument("TableLimits values must be positive.")
+	testErrInvalidTableGB     = nosqlerr.NewIllegalArgument("TableLimits StorageGB must be positive")
+	testErrInvalidTableUnits  = nosqlerr.NewIllegalArgument("TableLimits read/write units must be positive")
+	testErrInvalidAutoUnits   = nosqlerr.NewIllegalArgument("TableLimits read/write units must be zero for AutoScaling table")
+	testErrInvalidTableMode   = nosqlerr.NewIllegalArgument("TableLimits LimitsMode must be one of Provisioned or AutoScaling")
 )
 
 // RequestTestSuite contains tests for the operation requests.
@@ -113,12 +116,18 @@ func (suite *RequestTestSuite) TestValidateTableLimits() {
 		want   error
 	}{
 		{nil, testErrNilTableLimits},
-		{&TableLimits{}, testErrInvalidTableLimits},
-		{&TableLimits{0, 0, 0}, testErrInvalidTableLimits},
-		{&TableLimits{0, 1, 1}, testErrInvalidTableLimits},
-		{&TableLimits{1, 0, 1}, testErrInvalidTableLimits},
-		{&TableLimits{1, 1, 0}, testErrInvalidTableLimits},
-		{&TableLimits{1, 1, 1}, nil},
+		{&TableLimits{}, testErrInvalidTableGB},
+		{&TableLimits{0, 0, 0, 2}, testErrInvalidTableMode},
+		{&TableLimits{1, 1, 1, 0}, nil},
+		{&TableLimits{1, 1, 1, 1}, testErrInvalidAutoUnits},
+		{&TableLimits{0, 0, 1, 1}, nil},
+		{ProvisionedTableLimits(0, 0, 0), testErrInvalidTableGB},
+		{ProvisionedTableLimits(0, 1, 1), testErrInvalidTableUnits},
+		{ProvisionedTableLimits(1, 0, 1), testErrInvalidTableUnits},
+		{ProvisionedTableLimits(1, 1, 0), testErrInvalidTableGB},
+		{ProvisionedTableLimits(1, 1, 1), nil},
+		{AutoScalingTableLimits(0), testErrInvalidTableGB},
+		{AutoScalingTableLimits(1), nil},
 	}
 
 	for i, r := range tests {
