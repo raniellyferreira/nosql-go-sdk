@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [Unpublished]
+
+### Added
+- Cloud only: Added support for creating autoscaling tables
+- On-Prem only: Added supoort for setting Durability in put/delete operations
+- Added support for returning row modification time in get operations
+
+### Changed
+- TableLimits now includes a LimitsMode field, to allow for specifying AutoScaling. The default is Provisioned. This may affect existing code if the TableLimits struct was created without using named fields.
+- Internal logic now detects differences in server protocol version, and decrements its internal serial version to match. This is to maintain compatibility when a new driver is used with an old server.
+
 ## 1.2.2 - 2021-06-08
 
 ### Added
