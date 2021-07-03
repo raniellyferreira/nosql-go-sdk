@@ -109,7 +109,7 @@ func (req *GetRequest) deserialize(r proto.Reader, serialVersion int16) (Result,
 			return res, err
 		}
 	} else {
-		res.ModificationTime = 0
+		res.ModificationTime = -1
 	}
 
 	return res, nil
@@ -1335,7 +1335,7 @@ func deserializeWriteResult(r proto.Reader, serialVersion int16) (*WriteResult, 
 			return res, err
 		}
 	} else {
-		res.ExistingModificationTime = 0
+		res.ExistingModificationTime = -1
 	}
 
 	return res, nil

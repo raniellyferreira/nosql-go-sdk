@@ -31,6 +31,7 @@ import (
 	"github.com/oracle/nosql-go-sdk/nosqldb/jsonutil"
 	"github.com/oracle/nosql-go-sdk/nosqldb/logger"
 	"github.com/oracle/nosql-go-sdk/nosqldb/nosqlerr"
+	"github.com/oracle/nosql-go-sdk/nosqldb/types"
 )
 
 // Client represents an Oracle NoSQL database client used to access the Oracle
@@ -82,6 +83,9 @@ type Client struct {
 
 	// (possibly negotiated) version of the protocol in use
 	serialVersion int16
+
+	// for managing one-time messaging
+	oneTimeMessages map[string]struct{}
 }
 
 var (
@@ -135,6 +139,8 @@ func NewClient(cfg Config) (*Client, error) {
 		c.tableLimitUpdateMap = make(map[string]int64)
 		c.rateLimiterMap = make(map[string]common.RateLimiterPair)
 	}
+
+	c.oneTimeMessages = make(map[string]struct{})
 
 	return c, nil
 }
@@ -1047,6 +1053,35 @@ func (c *Client) doExecute(ctx context.Context, req Request, data []byte) (resul
 			return nil, err
 		}
 
+		// warn if using features not implemented at the connected server
+		// currently cloud does not support Durability
+		if c.serialVersion < 3 || c.isCloud {
+			needMsg := false
+			if pReq, ok := req.(*PutRequest); ok && pReq.Durability.IsSet() {
+				needMsg = true
+			} else if dReq, ok := req.(*DeleteRequest); ok && dReq.Durability.IsSet() {
+				needMsg = true
+			} else if mReq, ok := req.(*MultiDeleteRequest); ok && mReq.Durability.IsSet() {
+				needMsg = true
+			} else if wReq, ok := req.(*WriteMultipleRequest); ok && wReq.Durability.IsSet() {
+				needMsg = true
+			}
+			if needMsg {
+				c.oneTimeMessage("The requested feature is not supported " +
+					"by the connected server: Durability")
+			}
+		}
+
+		// AutoScaling is not available in V2
+		if c.serialVersion < 3 {
+			if tReq, ok := req.(*TableRequest); ok && tReq.TableLimits != nil {
+				if tReq.TableLimits.LimitsMode == types.AutoScaling {
+					c.oneTimeMessage("The requested feature is not supported " +
+						"by the connected server: AutoScaling")
+				}
+			}
+		}
+
 		reqCtx, reqCancel := context.WithTimeout(ctx, reqTimeout)
 		httpReq = httpReq.WithContext(reqCtx)
 		httpResp, err = c.executor.Do(httpReq)
@@ -1478,4 +1513,11 @@ func (c *Client) decrementSerialVersion() bool {
 // GetSerialVersion is used for tests.
 func (c *Client) GetSerialVersion() int16 {
 	return c.serialVersion
+}
+
+func (c *Client) oneTimeMessage(msg string) {
+	if _, ok := c.oneTimeMessages[msg]; ok == false {
+		c.oneTimeMessages[msg] = struct{}{}
+		c.logger.Warn(msg)
+	}
 }

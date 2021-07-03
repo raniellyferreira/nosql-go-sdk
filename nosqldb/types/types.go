@@ -122,6 +122,11 @@ type Durability struct {
 	ReplicaAck ReplicaAckPolicy `json:"replicaAck"`
 }
 
+// IsSet returns true if any durability values are nonzero
+func (d *Durability) IsSet() bool {
+	return d.MasterSync != 0 || d.ReplicaSync != 0 || d.ReplicaAck != 0
+}
+
 // LimitsMode defines the type of limits for a table.
 type LimitsMode int
 

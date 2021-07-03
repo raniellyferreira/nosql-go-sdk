@@ -111,6 +111,7 @@ type GetResult struct {
 
 	// ModificationTime represents the modification time of an existing row.
 	// Its value is in milliseconds since January 1 1970.
+	// A value of -1 indicates this feature is not available at the connected server.
 	ModificationTime int64 `json:"modificationTime"`
 
 	DelayInfo
@@ -442,6 +443,7 @@ type WriteResult struct {
 
 	// ExistingModificationTime represents the modification time of an existing row.
 	// Its value is in milliseconds since January 1 1970.
+	// A value of -1 indicates this feature is not available at the connected server.
 	ExistingModificationTime int64 `json:"existingModificationTime"`
 }
 
