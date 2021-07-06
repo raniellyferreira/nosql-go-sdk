@@ -230,7 +230,7 @@ type Writer interface {
 	// protocol version supports it.
 	WriteDurability(c types.Durability, serialVersion int16) (int, error)
 
-	// WriteDurability writes a LimitsMode value, if the
+	// WriteLimitsMode writes a LimitsMode value, if the
 	// protocol version supports it.
 	WriteLimitsMode(lm types.LimitsMode, serialVersion int16) (int, error)
 
