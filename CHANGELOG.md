@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## [Unpublished]
 
 ### Added
+- Added latest Oracle Cloud Infrastructure regions and region codes: LIN, MTZ, VCP, BRS, UKB.
 - Cloud only: Added support for creating autoscaling tables
 - On-Prem only: Added supoort for setting Durability in put/delete operations
 - Added support for returning row modification time in get operations
